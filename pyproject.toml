@@ -8,6 +8,8 @@ authors = ["Your Name <you@example.com>"]
 python = "^3.8"
 selenium = "^4.0.0"
 openpyxl = "^3.0.9"
+replit = "^3.2.4"
+pandas = "^1.4.1"
 
 [tool.poetry.dev-dependencies]
 
