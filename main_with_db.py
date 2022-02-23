@@ -19,6 +19,9 @@ chrome_options = Options()
 chrome_options.add_argument('--no-sandbox')
 chrome_options.add_argument('--disable-dev-shm-usage')
 
+
+chrome_options.add_argument("--headless") # running selenium in background
+
 print('working with replit db')
 driver = webdriver.Chrome(options=chrome_options)
 
@@ -41,16 +44,16 @@ web_url = 'https://www.amazon.in/dp/'
 
 for asin in list_of_asins :
     
-  print(asin)
+
   new_url = web_url+ asin
-  print(new_url)
+
   driver.get(new_url)
   driver.find_element_by_id('acrCustomerReviewText').click()
-  print('first part')
+
   string_review = driver.find_element_by_id('acrCustomerReviewText').text
   total_ratings = string_review.split()[0]
   total_ratings = int(total_ratings)
-  print('second part')
+
 
   percentage_1star = driver.find_element_by_xpath('//*[@id="histogramTable"]/tbody/tr[5]/td[3]/span[2]').text
   percentage_1star = int(percentage_1star.split('%')[0]) # converting string into integer (ex: '20%' into 20)
@@ -64,7 +67,7 @@ for asin in list_of_asins :
   #postive reviews
   percentage_5star = driver.find_element_by_xpath('//*[@id="histogramTable"]/tbody/tr[1]/td[3]/span[2]/a').text
   percentage_5star = int(percentage_5star.split('%')[0])
-  print(percentage_5star)
+  
 
   total_percentage_of_neg_ratings = percentage_1star + percentage_2star + percentage_3star
   # print('total_percentage_of_neg_ratings ' + str(total_percentage_of_neg_ratings))
@@ -72,7 +75,7 @@ for asin in list_of_asins :
 
   
   five_star_ratings = int(percentage_5star*0.01*total_ratings)
-  print('third part')
+
 
   list_of_reviews_per_asin.append(total_neg_ratings)
   list_positive_reviews_per_asin.append(five_star_ratings)
@@ -80,10 +83,10 @@ for asin in list_of_asins :
   time.sleep(2)
   
   
-print('fourth part')
 
-today_neg = str(today) + 'neg'
-today_pos = str(today) + 'pos'
+
+today_neg = str(today) + '_neg'
+today_pos = str(today) + '_pos'
 db[today_neg] = list_of_reviews_per_asin
 db[today_pos] = list_positive_reviews_per_asin
 
@@ -92,10 +95,9 @@ db[today_pos] = list_positive_reviews_per_asin
 df = pd.DataFrame(columns = db.keys())
 
 # there might be some issues in future here when more columns comes in
-print(db.keys())
 
 for col in df.columns:
-  print(col)
+
   df[col]= db[col]
 
 print(df)  

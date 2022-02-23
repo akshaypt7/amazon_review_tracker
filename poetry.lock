@@ -380,6 +380,17 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "tabulate"
+version = "0.8.9"
+description = "Pretty-print tabular data"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.extras]
+widechars = ["wcwidth"]
+
+[[package]]
 name = "trio"
 version = "0.19.0"
 description = "A friendly Python library for async concurrency and I/O"
@@ -473,7 +484,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "e1f5bf1e150b56ca29ef2e7040820482143755b1134b77d53ca5e968f9e93d19"
+content-hash = "67d897bc858fdbe9d2e9763f64250ee599deebd20c5d501b1bfd1862210f754d"
 
 [metadata.files]
 aiohttp = [
@@ -934,6 +945,10 @@ sniffio = [
 sortedcontainers = [
     {file = "sortedcontainers-2.4.0-py2.py3-none-any.whl", hash = "sha256:a163dcaede0f1c021485e957a39245190e74249897e2ae4b2aa38595db237ee0"},
     {file = "sortedcontainers-2.4.0.tar.gz", hash = "sha256:25caa5a06cc30b6b83d11423433f65d1f9d76c4c6a0c90e3379eaa43b9bfdb88"},
+]
+tabulate = [
+    {file = "tabulate-0.8.9-py3-none-any.whl", hash = "sha256:d7c013fe7abbc5e491394e10fa845f8f32fe54f8dc60c6622c6cf482d25d47e4"},
+    {file = "tabulate-0.8.9.tar.gz", hash = "sha256:eb1d13f25760052e8931f2ef80aaf6045a6cceb47514db8beab24cded16f13a7"},
 ]
 trio = [
     {file = "trio-0.19.0-py3-none-any.whl", hash = "sha256:c27c231e66336183c484fbfe080fa6cc954149366c15dc21db8b7290081ec7b8"},
