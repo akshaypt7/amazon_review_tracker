@@ -28,8 +28,19 @@ driver = webdriver.Chrome(options=chrome_options)
 
 # 
 
+def db_empty(db):
+  try :
+    list_of_asins = list(db['ASIN'])
+    return db
+    
+  except:
+    print('Database is empty, we are adding asin : B07ZVXZNVD ')
+    db['ASIN'] = ['B07ZVXZNVD']
+    return db
 
-def user_input():
+db = db_empty(db)
+
+def user_input(db):
   while True:
     list_of_asins = list(db['ASIN'])
     print(f'ASINs currently being tracked : {list_of_asins}')
@@ -57,21 +68,27 @@ def user_input():
       user_continue = str(input('Do you need to enter more ASINs - yes or no : ' ))
       user_continue = user_continue.lower() 
 
-      if user_continue == 'no':
+      
+      while user_continue != 'no' and user_continue !='yes' :
+        print('Enter either (yes/no)')
+        user_continue = str(input('Do you need to enter more ASINs (yes or no) : ' ))
+        user_continue = user_continue.lower()
+
+      if user_continue =='no':  
         return list_of_asins
 
   else:
-    list_of_asins = list(db['ASIN'])
+    # list_of_asins = list(db['ASIN'])
     return list_of_asins
 
         
         
       
-list_of_asins = user_input()      
+list_of_asins = user_input(db)      
   
 
 # list_of_asins = ['B07ZVXZNVD']
-list_of_asins = ['B07ZVXZNVD', 'B09CMWSVTH' ,'B09L64FT8X' ]
+# list_of_asins = ['B07ZVXZNVD', 'B09CMWSVTH' ,'B09L64FT8X' ]
 
 db['ASIN'] = list_of_asins
 
@@ -87,54 +104,69 @@ list_positive_reviews_per_asin =[]
 web_url = 'https://www.amazon.in/dp/'
 
 
-for asin in list_of_asins :
+def browser(list_of_asins,web_url):
+
+  while True:
     
+    for asin in list_of_asins :
+        
+    
+      new_url = web_url+ asin
+      print(f'Checking the ratings of {asin} ...')
+      driver.get(new_url)
+      time.sleep(1)
+      try: 
+        driver.find_element_by_id('acrCustomerReviewText').click()
+      except:
+        print(f'There is an issue with {asin} Asin ')
+        list_of_reviews_per_asin.append('error with asin')
+        list_positive_reviews_per_asin.append('error with asin')
+        continue
+    
+      
+      string_review = driver.find_element_by_id('acrCustomerReviewText').text
+      total_ratings = string_review.split()[0]
+      total_ratings = int(total_ratings)
+    
+    
+      percentage_1star = driver.find_element_by_xpath('//*[@id="histogramTable"]/tbody/tr[5]/td[3]/span[2]').text
+      percentage_1star = int(percentage_1star.split('%')[0]) # converting string into integer (ex: '20%' into 20)
+    
+      percentage_2star = driver.find_element_by_xpath('//*[@id="histogramTable"]/tbody/tr[4]/td[3]/span[2]').text
+      percentage_2star = int(percentage_2star.split('%')[0])
+    
+      percentage_3star = driver.find_element_by_xpath('//*[@id="histogramTable"]/tbody/tr[3]/td[3]/span[2]').text
+      percentage_3star = int(percentage_3star.split('%')[0])
+    
+      #postive reviews
+      percentage_5star = driver.find_element_by_xpath('//*[@id="histogramTable"]/tbody/tr[1]/td[3]/span[2]/a').text
+      percentage_5star = int(percentage_5star.split('%')[0])
+      
+    
+      total_percentage_of_neg_ratings = percentage_1star + percentage_2star + percentage_3star
+      # print('total_percentage_of_neg_ratings ' + str(total_percentage_of_neg_ratings))
+      total_neg_ratings = int(total_percentage_of_neg_ratings *0.01* total_ratings)
+    
+      
+      five_star_ratings = int(percentage_5star*0.01*total_ratings)
+    
+    
+      list_of_reviews_per_asin.append(total_neg_ratings)
+      list_positive_reviews_per_asin.append(five_star_ratings)
+      
+      time.sleep(1)
+      
+      
+    
+    
+    today_neg = str(today) + '_neg'
+    today_pos = str(today) + '_pos'
+    db[today_neg] = list_of_reviews_per_asin
+    db[today_pos] = list_positive_reviews_per_asin
+    return db
 
-  new_url = web_url+ asin
-  print(f'Checking the ratings of {asin} ...')
-  driver.get(new_url)
-  time.sleep(7)
-  driver.find_element_by_id('acrCustomerReviewText').click()
+db = browser(list_of_asins,web_url)
 
-  string_review = driver.find_element_by_id('acrCustomerReviewText').text
-  total_ratings = string_review.split()[0]
-  total_ratings = int(total_ratings)
-
-
-  percentage_1star = driver.find_element_by_xpath('//*[@id="histogramTable"]/tbody/tr[5]/td[3]/span[2]').text
-  percentage_1star = int(percentage_1star.split('%')[0]) # converting string into integer (ex: '20%' into 20)
-
-  percentage_2star = driver.find_element_by_xpath('//*[@id="histogramTable"]/tbody/tr[4]/td[3]/span[2]').text
-  percentage_2star = int(percentage_2star.split('%')[0])
-
-  percentage_3star = driver.find_element_by_xpath('//*[@id="histogramTable"]/tbody/tr[3]/td[3]/span[2]').text
-  percentage_3star = int(percentage_3star.split('%')[0])
-
-  #postive reviews
-  percentage_5star = driver.find_element_by_xpath('//*[@id="histogramTable"]/tbody/tr[1]/td[3]/span[2]/a').text
-  percentage_5star = int(percentage_5star.split('%')[0])
-  
-
-  total_percentage_of_neg_ratings = percentage_1star + percentage_2star + percentage_3star
-  # print('total_percentage_of_neg_ratings ' + str(total_percentage_of_neg_ratings))
-  total_neg_ratings = int(total_percentage_of_neg_ratings *0.01* total_ratings)
-
-  
-  five_star_ratings = int(percentage_5star*0.01*total_ratings)
-
-
-  list_of_reviews_per_asin.append(total_neg_ratings)
-  list_positive_reviews_per_asin.append(five_star_ratings)
-  
-  time.sleep(2)
-  
-  
-
-
-today_neg = str(today) + '_neg'
-today_pos = str(today) + '_pos'
-db[today_neg] = list_of_reviews_per_asin
-db[today_pos] = list_positive_reviews_per_asin
 
 
 def create_table(db):
@@ -146,5 +178,22 @@ def create_table(db):
   print(tabulate(dict,headers='keys',tablefmt='fancy_grid')) 
 
 create_table(db)
+
+def delete_asin(db): # not done
+  user_input_delete = str(input('Do you want to delete any asin from the table (yes/no) : '))
+  user_input_delete = user_input_delete.lower() 
+
+  while user_input_delete != 'no' and user_input_delete !='yes' :
+    print('Enter either (yes/no)')
+    user_input_delete = str(input('Do you want to delete any asin from the table (yes/no) : '))
+    user_input_delete = user_input_delete.lower()
+
+  if user_input_delete =='no':
+    return None
+
+  else:
+    del db[user_input_delete] 
+    
+
 
 driver.quit()

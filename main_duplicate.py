@@ -7,10 +7,11 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
 from selenium.common.exceptions import NoSuchElementException
-import openpyxl
 from datetime import date
 from replit import db
 import pandas as pd
+from tabulate import tabulate
+from collections import OrderedDict
 
 import warnings
 warnings.filterwarnings("ignore") # we might have to remove this later, since we do not know if there might be any issues
@@ -42,7 +43,7 @@ def user_input():
   if user_ans == 'yes':
     print('Pass the ASIN of products you need to track the reviews')
 
-    list_of_asins = list(db['ASIN'])
+    # list_of_asins = list(db['ASIN'])
     while True:
       new_asin = str(input('Enter Asin : '))
       if new_asin in list_of_asins:
@@ -60,7 +61,7 @@ def user_input():
         return list_of_asins
 
   else:
-    list_of_asins = list(db['ASIN'])
+    # list_of_asins = list(db['ASIN'])
     return list_of_asins
 
         
@@ -70,7 +71,7 @@ list_of_asins = user_input()
   
 
 # list_of_asins = ['B07ZVXZNVD']
-list_of_asins = ['B07ZVXZNVD', 'B09CMWSVTH' ,'B09L64FT8X' ]
+# list_of_asins = ['B07ZVXZNVD', 'B09CMWSVTH' ,'B09L64FT8X' ]
 
 db['ASIN'] = list_of_asins
 
@@ -92,9 +93,16 @@ for asin in list_of_asins :
   new_url = web_url+ asin
   print(f'Checking the ratings of {asin} ...')
   driver.get(new_url)
-  time.sleep(7)
-  driver.find_element_by_id('acrCustomerReviewText').click()
+  time.sleep(2)
+  try: 
+    driver.find_element_by_id('acrCustomerReviewText').click()
+  except:
+    print(f'There is an issue with {asin} Asin ')
+    list_of_reviews_per_asin.append('error with asin')
+    list_positive_reviews_per_asin.append('error with asin')
+    pass
 
+  
   string_review = driver.find_element_by_id('acrCustomerReviewText').text
   total_ratings = string_review.split()[0]
   total_ratings = int(total_ratings)
@@ -135,22 +143,15 @@ today_pos = str(today) + '_pos'
 db[today_neg] = list_of_reviews_per_asin
 db[today_pos] = list_positive_reviews_per_asin
 
-# print(db[today])
 
-df = pd.DataFrame(columns = db.keys())
+def create_table(db):
+  dict = OrderedDict()
 
-# there might be some issues in future here when more columns comes in
-print(db)
-print('-----')
-print(db.keys())
+  for key in db.keys():
+    dict[key]= list(db[key])
 
-for key in db.keys():
-  print()
+  print(tabulate(dict,headers='keys',tablefmt='fancy_grid')) 
 
-for col in df.columns:
-
-  df[col]= db[col]
-
-print(df)  
+create_table(db)
 
 driver.quit()

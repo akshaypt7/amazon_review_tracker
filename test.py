@@ -8,13 +8,12 @@ from tabulate import tabulate
 # del db["2022-02-22neg"]
 # del db['2022-02-22pos']
 # print(db.keys())
-from collections import OrderedDict
+# from collections import OrderedDict
 
-dict = OrderedDict()
+# db.clear()
 
-for key in db.keys():
-  dict[key]= list(db[key])
-
-print(tabulate(dict,headers='keys',tablefmt='fancy_grid'))
+idx = db['ASIN'].index('B09RSS8BTV')
+print(idx)
+print(db.iloc[idx])
 
 print('done')
