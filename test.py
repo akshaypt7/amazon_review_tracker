@@ -10,10 +10,21 @@ from tabulate import tabulate
 # print(db.keys())
 # from collections import OrderedDict
 
-# db.clear()
+db.clear()
 
-idx = db['ASIN'].index('B09RSS8BTV')
-print(idx)
-print(db.iloc[idx])
+# idx = db['ASIN'].index('B09RSS8BTV')
+# print(db.keys())
+# print(idx)
+# # print(db.iloc[idx])
+# print('---')
+# print(db['ASIN'])
+# print('---')
+# print(db['ASIN'].pop(1))
+# print('---')
+# print(db['ASIN'])
+
+
+
+
 
 print('done')

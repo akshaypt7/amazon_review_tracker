@@ -87,8 +87,9 @@ def user_input(db):
 list_of_asins = user_input(db)      
   
 
-# list_of_asins = ['B07ZVXZNVD']
-# list_of_asins = ['B07ZVXZNVD', 'B09CMWSVTH' ,'B09L64FT8X' ]
+list_of_asins = ['B07ZVXZNVD']
+list_of_asins = ['B096FJG4FR', 'B08Y6PGH7S' ,'B08ZCP8DBS','B0957WJB9N','B07TM3LRVB',
+                 'B08332221J','B07KYFHTGF','B08976V1BZ','B0849NLNTQ' ]
 
 db['ASIN'] = list_of_asins
 
@@ -126,6 +127,8 @@ def browser(list_of_asins,web_url):
       
       string_review = driver.find_element_by_id('acrCustomerReviewText').text
       total_ratings = string_review.split()[0]
+      total_ratings = total_ratings.replace(',','')
+      
       total_ratings = int(total_ratings)
     
     
@@ -165,7 +168,19 @@ def browser(list_of_asins,web_url):
     db[today_pos] = list_positive_reviews_per_asin
     return db
 
-db = browser(list_of_asins,web_url)
+def today_tracked(db): # function to see if the tracker was already ran today
+  # we have to look into the case of tracking new asins in a day, then we have to run the function, but we do not need to do for those we have already done.
+  
+  values = db.prefix(str(today))
+  if len(values) != 0:
+    print('Tracker already ran today')
+    return db
+  else:
+    db = browser(list_of_asins,web_url)
+    return db
+    
+db = today_tracked(db)
+# db = browser(list_of_asins,web_url)
 
 
 
@@ -192,8 +207,20 @@ def delete_asin(db): # not done
     return None
 
   else:
-    del db[user_input_delete] 
+    asin_input = str(input('Enter the Asin you want to delete : '))
+    idx = db['ASIN'].index(asin_input)
     
+    for key in db.keys():
+
+      try:
+        db[key].pop(idx)
+        
+      except:
+        pass
+
+  create_table(db)   
+  
+delete_asin(db)    
 
 
 driver.quit()
