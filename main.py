@@ -26,7 +26,8 @@ chrome_options.add_argument("--headless") # running selenium in background
 print('working with replit db')
 driver = webdriver.Chrome(options=chrome_options)
 
-# 
+
+
 
 def db_empty(db):
   try :
@@ -87,9 +88,13 @@ def user_input(db):
 list_of_asins = user_input(db)      
   
 
-list_of_asins = ['B07ZVXZNVD']
-list_of_asins = ['B096FJG4FR', 'B08Y6PGH7S' ,'B08ZCP8DBS','B0957WJB9N','B07TM3LRVB',
-                 'B08332221J','B07KYFHTGF','B08976V1BZ','B0849NLNTQ' ]
+
+# remove this code when you are using it in production, 
+# this is just to make it easy to enter many asins at at time
+# list_of_asins = ['B096FJG4FR', 'B08Y6PGH7S' ,'B08ZCP8DBS','B0957WJB9N','B07TM3LRVB',
+                 # 'B08332221J','B07KYFHTGF','B08976V1BZ','B0849NLNTQ' ]
+# list_of_asins = ['B07ZVXZNVD','B08Y6PGH7S']
+
 
 db['ASIN'] = list_of_asins
 
@@ -100,6 +105,7 @@ today = date.today()
 
 list_of_reviews_per_asin = []
 list_positive_reviews_per_asin =[]
+title_of_products = []
 
 
 web_url = 'https://www.amazon.in/dp/'
@@ -156,6 +162,15 @@ def browser(list_of_asins,web_url):
     
       list_of_reviews_per_asin.append(total_neg_ratings)
       list_positive_reviews_per_asin.append(five_star_ratings)
+
+      # finding title of products
+      title_full = driver.find_element_by_id('productTitle').text
+      title_as_list = title_full.split()
+
+
+      title = title_as_list[0:4]
+      title = ' '.join((title))
+      title_of_products.append(title)
       
       time.sleep(1)
       
@@ -164,8 +179,10 @@ def browser(list_of_asins,web_url):
     
     today_neg = str(today) + '_neg'
     today_pos = str(today) + '_pos'
+    db['Title']   = title_of_products
     db[today_neg] = list_of_reviews_per_asin
     db[today_pos] = list_positive_reviews_per_asin
+    
     return db
 
 def today_tracked(db): # function to see if the tracker was already ran today
@@ -191,6 +208,8 @@ def create_table(db):
     dict[key]= list(db[key])
 
   print(tabulate(dict,headers='keys',tablefmt='fancy_grid')) 
+
+  return dict # can be used to get csv file
 
 create_table(db)
 
@@ -222,5 +241,25 @@ def delete_asin(db): # not done
   
 delete_asin(db)    
 
+def create_csv(db=db):
+  
+  csv_input = str(input('Do you want this to be exported to a CSV file? (yes/no) : '))
+
+  if csv_input == 'yes' :
+    data = {}              
+    data = create_table(db)
+    # df = pd.DataFrame(data, columns = data.keys())
+    df = pd.DataFrame.from_dict(data,orient='index').T
+    df.to_csv('review_data.csv', index=False)
+  elif csv_input == 'no':
+    return None
+
+  else:
+    print('Enter either yes or no')
+    create_csv()
+
+  
+
+create_csv(db)
 
 driver.quit()

@@ -128,6 +128,14 @@ ssh = ["bcrypt (>=3.1.5)"]
 test = ["pytest (>=6.2.0)", "pytest-cov", "pytest-subtests", "pytest-xdist", "pretend", "iso8601", "pytz", "hypothesis (>=1.11.4,!=3.79.2)"]
 
 [[package]]
+name = "easymail"
+version = "0.3.0"
+description = "abstraction layer on top of the email package to make sending    emails a little bit easier"
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "et-xmlfile"
 version = "1.1.0"
 description = "An implementation of lxml.xmlfile for the standard library"
@@ -484,7 +492,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "67d897bc858fdbe9d2e9763f64250ee599deebd20c5d501b1bfd1862210f754d"
+content-hash = "9327626556234978751c774126730ce881ddbe8d54ed4cd3a9f00622717d0d53"
 
 [metadata.files]
 aiohttp = [
@@ -666,6 +674,10 @@ cryptography = [
     {file = "cryptography-35.0.0-pp37-pypy37_pp73-manylinux_2_24_x86_64.whl", hash = "sha256:abb5a361d2585bb95012a19ed9b2c8f412c5d723a9836418fab7aaa0243e67d2"},
     {file = "cryptography-35.0.0-pp37-pypy37_pp73-win_amd64.whl", hash = "sha256:1ed82abf16df40a60942a8c211251ae72858b25b7421ce2497c2eb7a1cee817c"},
     {file = "cryptography-35.0.0.tar.gz", hash = "sha256:9933f28f70d0517686bd7de36166dda42094eac49415459d9bdf5e7df3e0086d"},
+]
+easymail = [
+    {file = "easymail-0.3.0-py2.py3-none-any.whl", hash = "sha256:e9d8c7d8cf8d9d035d53d68e4132038bcf86a8fa5b9682e8b6c315b4b3053c1b"},
+    {file = "easymail-0.3.0.tar.gz", hash = "sha256:c644de6081a167e698cae411cfd60d94bf14cf931060de1d50cdc67bd8369735"},
 ]
 et-xmlfile = [
     {file = "et_xmlfile-1.1.0-py3-none-any.whl", hash = "sha256:a2ba85d1d6a74ef63837eed693bcb89c3f752169b0e3e7ae5b16ca5e1b3deada"},
