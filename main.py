@@ -1,35 +1,31 @@
 # import selenium
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 import time
-from selenium.common.exceptions import NoSuchElementException
 from datetime import date
 from replit import db
 import pandas as pd
 from tabulate import tabulate
 from collections import OrderedDict
-
+from email_csv import sent_email
 import warnings
 warnings.filterwarnings("ignore") # we might have to remove this later, since we do not know if there might be any issues
 
+# To run selenium in Replit
 chrome_options = Options()
 chrome_options.add_argument('--no-sandbox')
 chrome_options.add_argument('--disable-dev-shm-usage')
 
+# running selenium in background
+chrome_options.add_argument("--headless") 
 
-chrome_options.add_argument("--headless") # running selenium in background
-
-print('working with replit db')
+# Initiating the driver object from selenium
 driver = webdriver.Chrome(options=chrome_options)
 
 
-
-
 def db_empty(db):
+  '''We are checking if the database is empty, if it is we add one product to the database .'''
+  
   try :
     list_of_asins = list(db['ASIN'])
     return db
@@ -41,9 +37,13 @@ def db_empty(db):
 
 db = db_empty(db)
 
+
 def user_input(db):
+
+  '''Here we ask for the input from the user to add new asins to track. We also display the ASINS we are tracking.'''
+  
   while True:
-    list_of_asins = list(db['ASIN'])
+    list_of_asins = list(db['ASIN']) # list of asins we track
     print(f'ASINs currently being tracked : {list_of_asins}')
     user_ans= str(input('Do you want to enter new ASINs to track reviews- yes or no : '))
     user_ans = user_ans.lower()   
@@ -61,7 +61,7 @@ def user_input(db):
       if new_asin in list_of_asins:
         print('ASIN already being tracked')
         continue
-        # there is an issue here if customer do not have any asin to add this might be infinite loop
+        # there is an issue here if customer do not have any asin to add this might be infinite loop, i have intoduced break for that so it breaks from this while loop 
       list_of_asins.append(new_asin)
       
 
@@ -243,14 +243,16 @@ delete_asin(db)
 
 def create_csv(db=db):
   
-  csv_input = str(input('Do you want this to be exported to a CSV file? (yes/no) : '))
+  csv_input = str(input('Do you want this file to be send as a CSV file to your email-id ? (yes/no) : '))
 
   if csv_input == 'yes' :
     data = {}              
     data = create_table(db)
     # df = pd.DataFrame(data, columns = data.keys())
     df = pd.DataFrame.from_dict(data,orient='index').T
-    df.to_csv('review_data.csv', index=False)
+    df.set_index(['ASIN','Title'],inplace= True)
+    df.to_csv('review_data.csv')
+    sent_email()
   elif csv_input == 'no':
     return None
 
