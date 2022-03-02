@@ -22,7 +22,6 @@ chrome_options.add_argument("--headless")
 # Initiating the driver object from selenium
 driver = webdriver.Chrome(options=chrome_options)
 
-print('Start \n')
 
 def db_empty(db):
   '''We are checking if the database is empty, if it is we add one product to the database .'''
@@ -37,9 +36,7 @@ def db_empty(db):
     db['ASIN'] = ['B07ZVXZNVD']
     return db
 
-print('----')
-print(db.keys())
-print('----')
+
 db = db_empty(db)
 
 
