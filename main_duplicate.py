@@ -1,82 +1,92 @@
 # import selenium
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 import time
-from selenium.common.exceptions import NoSuchElementException
 from datetime import date
 from replit import db
 import pandas as pd
 from tabulate import tabulate
 from collections import OrderedDict
-
+from email_csv import sent_email
 import warnings
 warnings.filterwarnings("ignore") # we might have to remove this later, since we do not know if there might be any issues
 
+# To run selenium in Replit
 chrome_options = Options()
 chrome_options.add_argument('--no-sandbox')
 chrome_options.add_argument('--disable-dev-shm-usage')
 
+# running selenium in background
+chrome_options.add_argument("--headless") 
 
-chrome_options.add_argument("--headless") # running selenium in background
-
-print('working with replit db')
+# Initiating the driver object from selenium
 driver = webdriver.Chrome(options=chrome_options)
 
-# 
 
 def db_empty(db):
+  '''We are checking if the database is empty, if it is we add one product to the database .'''
+  
   try :
     list_of_asins = list(db['ASIN'])
     return db
     
   except:
-    print('Database is empty, we are adding asin : B07ZVXZNVD ')
+  
+    print('Database is empty, we are adding asin : B07ZVXZNVD \n')
     db['ASIN'] = ['B07ZVXZNVD']
     return db
 
 db = db_empty(db)
 
-def user_input(db):
+
+def user_input(db=db):
+
+  '''Here we ask for the input from the user to add new asins to track. We also display the ASINS we are tracking.'''
+  
   while True:
-    list_of_asins = list(db['ASIN'])
-    print(f'ASINs currently being tracked : {list_of_asins}')
+    list_of_asins = list(db['ASIN']) # list of asins we track
+    print(f'ASINs currently being tracked : {list_of_asins} \n')
     user_ans= str(input('Do you want to enter new ASINs to track reviews- yes or no : '))
-    user_ans = user_ans.lower()   
+    user_ans = user_ans.lower()  
+    
     if user_ans == 'yes' or user_ans == 'no':
       break
     else:  
-     print('Type either yes or no to Continue')  
+     print('Type either yes or no to Continue \n')  
   
   if user_ans == 'yes':
-    print('Pass the ASIN of products you need to track the reviews')
+    print('Pass the ASIN of products you need to track the reviews \n')
 
-    # list_of_asins = list(db['ASIN'])
-    while True:
-      new_asin = str(input('Enter Asin : '))
-      if new_asin in list_of_asins:
-        print('ASIN already being tracked')
-        continue
-        # there is an issue here if customer do not have any asin to add this might be infinite loop
+    new_asin = str(input('Enter Asin : '))
+    if new_asin in list_of_asins:
+      print('ASIN already being tracked \n')
+      user_input() # if we need to add different asin (recurssion)
+  
+      # there is an issue here if customer do not have any asin to add this might be infinite loop, i have intoduced break for that so it breaks from this while loop 
+    else:
       list_of_asins.append(new_asin)
-      
+    
 
 
-      user_continue = str(input('Do you need to enter more ASINs - yes or no : ' ))
-      user_continue = user_continue.lower() 
+    user_continue = str(input('Do you need to enter more ASINs - yes or no : ' ))
+    user_continue = user_continue.lower() 
 
-      
-      while user_continue != 'no' and user_continue !='yes' :
-        print('Enter either (yes/no)')
-        user_continue = str(input('Do you need to enter more ASINs (yes or no) : ' ))
-        user_continue = user_continue.lower()
+    # if user types words otherthan yes or no
+    while user_continue != 'no' and user_continue !='yes' :
+      print('Enter either (yes/no) \n')
+      user_continue = str(input('Do you need to enter more ASINs (yes or no) : ' ))
+      user_continue = user_continue.lower()
 
-      if user_continue =='no':  
-        return list_of_asins
+    if user_continue =='no':  
+      return list_of_asins
 
+    elif user_continue =='yes':
+      user_input()
+
+    # if it is yes, the while loop runs again.  
+
+
+  
   else:
     # list_of_asins = list(db['ASIN'])
     return list_of_asins
@@ -87,18 +97,24 @@ def user_input(db):
 list_of_asins = user_input(db)      
   
 
-# list_of_asins = ['B07ZVXZNVD']
-# list_of_asins = ['B07ZVXZNVD', 'B09CMWSVTH' ,'B09L64FT8X' ]
+
+# remove this code when you are using it in production, 
+# this is just to make it easy to enter many asins at at time
+# list_of_asins = ['B096FJG4FR', 'B08Y6PGH7S' ,'B08ZCP8DBS','B0957WJB9N','B07TM3LRVB',
+                 # 'B08332221J','B07KYFHTGF','B08976V1BZ','B0849NLNTQ' ]
+# list_of_asins = ['B07ZVXZNVD','B08Y6PGH7S']
+
 
 db['ASIN'] = list_of_asins
 
-print('processing')
+print('processing... \n')
 
 today = date.today()
 
 
 list_of_reviews_per_asin = []
 list_positive_reviews_per_asin =[]
+title_of_products = []
 
 
 web_url = 'https://www.amazon.in/dp/'
@@ -112,13 +128,13 @@ def browser(list_of_asins,web_url):
         
     
       new_url = web_url+ asin
-      print(f'Checking the ratings of {asin} ...')
+      print(f'Checking the ratings of {asin} ... \n')
       driver.get(new_url)
       time.sleep(1)
       try: 
         driver.find_element_by_id('acrCustomerReviewText').click()
       except:
-        print(f'There is an issue with {asin} Asin ')
+        print(f'There is an issue with {asin} Asin \n')
         list_of_reviews_per_asin.append('error with asin')
         list_positive_reviews_per_asin.append('error with asin')
         continue
@@ -126,6 +142,8 @@ def browser(list_of_asins,web_url):
       
       string_review = driver.find_element_by_id('acrCustomerReviewText').text
       total_ratings = string_review.split()[0]
+      total_ratings = total_ratings.replace(',','')
+      
       total_ratings = int(total_ratings)
     
     
@@ -153,6 +171,15 @@ def browser(list_of_asins,web_url):
     
       list_of_reviews_per_asin.append(total_neg_ratings)
       list_positive_reviews_per_asin.append(five_star_ratings)
+
+      # finding title of products
+      title_full = driver.find_element_by_id('productTitle').text
+      title_as_list = title_full.split()
+
+
+      title = title_as_list[0:4]
+      title = ' '.join((title))
+      title_of_products.append(title)
       
       time.sleep(1)
       
@@ -161,13 +188,26 @@ def browser(list_of_asins,web_url):
     
     today_neg = str(today) + '_neg'
     today_pos = str(today) + '_pos'
+    db['Title']   = title_of_products
     db[today_neg] = list_of_reviews_per_asin
     db[today_pos] = list_positive_reviews_per_asin
+    
     return db
 
-def today_tracked(). # function to see if the tracker was already ran today
-
-db = browser(list_of_asins,web_url)
+def today_tracked(db): # function to see if the tracker was already ran today
+  # we have to look into the case of tracking new asins in a day, then we have to run the function, but we do not need to do for those we have already done.
+  
+  values = db.prefix(str(today))
+  if len(values) != 0:
+    print('Tracker already ran today')
+    return db
+  else:
+    db = browser(list_of_asins,web_url)
+    return db
+    
+db = today_tracked(db)
+# db = browser(list_of_asins,web_url)
+# db = browser(list_of_asins,web_url)
 
 
 
@@ -178,6 +218,8 @@ def create_table(db):
     dict[key]= list(db[key])
 
   print(tabulate(dict,headers='keys',tablefmt='fancy_grid')) 
+
+  return dict # can be used to get csv file
 
 create_table(db)
 
@@ -205,9 +247,32 @@ def delete_asin(db): # not done
       except:
         pass
 
-  create_table(db)   
+    create_table(db)  # to show the asin is deleted 
   
 delete_asin(db)    
 
+
+def create_csv(db=db):
+  
+  csv_input = str(input('Do you want this file to be send as a CSV file to your email-id ? (yes/no) : '))
+
+  if csv_input == 'yes' :
+    data = {}              
+    data = create_table(db)
+    # df = pd.DataFrame(data, columns = data.keys())
+    df = pd.DataFrame.from_dict(data,orient='index').T
+    df.set_index(['ASIN','Title'],inplace= True)
+    df.to_csv('review_data.csv')
+    sent_email()
+  elif csv_input == 'no':
+    return None
+
+  else:
+    print('Enter either yes or no')
+    create_csv()
+
+  
+
+create_csv(db)
 
 driver.quit()
