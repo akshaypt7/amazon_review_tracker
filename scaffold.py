@@ -23,20 +23,22 @@ chrome_options.add_argument("--headless")
 driver = webdriver.Chrome(options=chrome_options)
 
 
-def db_empty(db):
-  '''We are checking if the database is empty, if it is we add one product to the database .'''
-  
-  try :
-    list_of_asins = list(db['ASIN'])
-    return db
-    
-  except:
-  
-    print('Database is empty, we are adding asin : B07ZVXZNVD \n')
-    db['ASIN'] = ['B07ZVXZNVD']
-    return db
 
-db = db_empty(db)
+# def db_empty(db):
+#   '''We are checking if the database is empty, if it is we add one product to the database .'''
+  
+#   try :
+#     list_of_asins = list(db['ASIN'])
+#     return db
+    
+#   except:
+  
+#     print('Database is empty, we are adding asin : B07ZVXZNVD \n')
+#     db['ASIN'] = ['B07ZVXZNVD']
+#     return db
+
+
+# db = db_empty(db)
 
 
 def user_input(db=db):
@@ -206,6 +208,8 @@ def today_tracked(db): # function to see if the tracker was already ran today
     return db
     
 db = today_tracked(db)
+    
+db = today_tracked(db)
 # db = browser(list_of_asins,web_url)
 # db = browser(list_of_asins,web_url)
 
@@ -224,19 +228,19 @@ def create_table(db):
 create_table(db)
 
 def delete_asin(db): # not done
-  user_input_delete = str(input('Do you want to delete any asin from the table (yes/no) : '))
+  user_input_delete = str(input('\n Do you want to delete any asin from the table (yes/no) : '))
   user_input_delete = user_input_delete.lower() 
 
   while user_input_delete != 'no' and user_input_delete !='yes' :
-    print('Enter either (yes/no)')
-    user_input_delete = str(input('Do you want to delete any asin from the table (yes/no) : '))
+    print('\n Enter either (yes/no)')
+    user_input_delete = str(input('\n Do you want to delete any asin from the table (yes/no) : '))
     user_input_delete = user_input_delete.lower()
 
   if user_input_delete =='no':
     return None
 
   else:
-    asin_input = str(input('Enter the Asin you want to delete : '))
+    asin_input = str(input('\n Enter the Asin you want to delete : '))
     idx = db['ASIN'].index(asin_input)
     
     for key in db.keys():
@@ -254,16 +258,41 @@ delete_asin(db)
 
 def create_csv(db=db):
   
-  csv_input = str(input('Do you want this file to be send as a CSV file to your email-id ? (yes/no) : '))
+  csv_input = str(input('\n Do you want this file to be send as a CSV file to your email-id ? (yes/no) : '))
 
   if csv_input == 'yes' :
-    data = {}              
-    data = create_table(db)
-    # df = pd.DataFrame(data, columns = data.keys())
-    df = pd.DataFrame.from_dict(data,orient='index').T
-    df.set_index(['ASIN','Title'],inplace= True)
-    df.to_csv('review_data.csv')
+
+    dict_positive = {}
+    dict_negative = {}
+    for key in db.keys():
+  
+      if key.endswith('pos'):
+    
+        key_dic = key[:-4]
+        dict_positive[key_dic] = db[key]
+
+      elif key.endswith('neg'):
+
+        key_dic = key[:-4]
+        dict_negative[key_dic] = db[key]
+
+    dict_negative['ASIN'] = db['ASIN']
+    dict_negative['Title'] = db['Title']
+  
+    dict_positive['ASIN'] = db['ASIN']
+    dict_positive['Title'] = db['Title']
+
+    df_pos = pd.DataFrame.from_dict(dict_positive,orient='columns')
+  
+    df_pos.set_index(['ASIN','Title'],inplace= True)
+    df_pos.to_csv('positive_review_data.csv')
+  
+    df_neg = pd.DataFrame.from_dict(dict_negative,orient='columns')
+    df_neg.set_index(['ASIN','Title'],inplace= True)
+    df_neg.to_csv('negative_review_data.csv')
+  
     sent_email()
+  
   elif csv_input == 'no':
     return None
 

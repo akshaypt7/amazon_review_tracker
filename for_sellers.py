@@ -23,80 +23,46 @@ chrome_options.add_argument("--headless")
 driver = webdriver.Chrome(options=chrome_options)
 
 
-
-def db_empty(db):
-  '''We are checking if the database is empty, if it is we add one product to the database .'''
-  
-  try :
-    list_of_asins = list(db['ASIN'])
-    return db
-    
-  except:
-  
-    print('Database is empty, we are adding asin : B07ZVXZNVD \n')
-    db['ASIN'] = ['B07ZVXZNVD']
-    return db
-
-
-db = db_empty(db)
-
+list_of_asins=[]
 
 def user_input(db=db):
 
   '''Here we ask for the input from the user to add new asins to track. We also display the ASINS we are tracking.'''
-  
+
   while True:
-    list_of_asins = list(db['ASIN']) # list of asins we track
-    print(f'ASINs currently being tracked : {list_of_asins} \n')
+  
     user_ans= str(input('Do you want to enter new ASINs to track reviews- yes or no : '))
     user_ans = user_ans.lower()  
     
-    if user_ans == 'yes' or user_ans == 'no':
-      break
-    else:  
-     print('Type either yes or no to Continue \n')  
+    if user_ans != 'yes' and user_ans != 'no':
+      print('Type either yes or no to Continue \n') 
+      continue
   
-  if user_ans == 'yes':
-    print('Pass the ASIN of products you need to track the reviews \n')
-
-    new_asin = str(input('Enter Asin : '))
-    if new_asin in list_of_asins:
-      print('ASIN already being tracked \n')
-      user_input() # if we need to add different asin (recurssion)
-  
-      # there is an issue here if customer do not have any asin to add this might be infinite loop, i have intoduced break for that so it breaks from this while loop 
-    else:
-      list_of_asins.append(new_asin)
+    elif user_ans == 'yes':
+      print('Pass the ASIN of products you need to track the reviews \n')
     
-
-
-    user_continue = str(input('Do you need to enter more ASINs - yes or no : ' ))
-    user_continue = user_continue.lower() 
-
-    # if user types words otherthan yes or no
-    while user_continue != 'no' and user_continue !='yes' :
-      print('Enter either (yes/no) \n')
-      user_continue = str(input('Do you need to enter more ASINs (yes or no) : ' ))
-      user_continue = user_continue.lower()
-
-    if user_continue =='no':  
+      new_asin = str(input('Enter Asin : '))
+      print(f'List of ASINs(0) {list_of_asins}')
+      if new_asin in list_of_asins:
+        print('ASIN already being tracked \n')
+        # user_input() # if we need to add different asin (recurssion)
+        continue
+      else:
+        list_of_asins.append(new_asin)
+        continue
+        
+        # there is an issue here if customer do not have any asin to add this might be infinite loop, i have intoduced break for that so it breaks from this while loop 
+    elif user_ans == 'no':
+      # list_of_asins.append(new_asin)
+      print(f'List of ASINs(0.1) {list_of_asins}')
       return list_of_asins
-
-    elif user_continue =='yes':
-      user_input()
-
-    # if it is yes, the while loop runs again.  
-
-
-  
-  else:
-    # list_of_asins = list(db['ASIN'])
-    return list_of_asins
 
         
         
       
 list_of_asins = user_input(db)      
+
+print(f'list of ASINS (1) {list_of_asins}')
   
 
 
@@ -107,7 +73,7 @@ list_of_asins = user_input(db)
 # list_of_asins = ['B07ZVXZNVD','B08Y6PGH7S']
 
 
-db['ASIN'] = list_of_asins
+# db['ASIN'] = list_of_asins
 
 print('processing... \n')
 
@@ -121,6 +87,7 @@ title_of_products = []
 
 web_url = 'https://www.amazon.in/dp/'
 
+dic_data = {}
 
 def browser(list_of_asins,web_url):
 
@@ -148,7 +115,7 @@ def browser(list_of_asins,web_url):
       
       total_ratings = int(total_ratings)
     
-    
+      #negative
       percentage_1star = driver.find_element_by_xpath('//*[@id="histogramTable"]/tbody/tr[5]/td[3]/span[2]').text
       percentage_1star = int(percentage_1star.split('%')[0]) # converting string into integer (ex: '20%' into 20)
     
@@ -190,26 +157,18 @@ def browser(list_of_asins,web_url):
     
     today_neg = str(today) + '_neg'
     today_pos = str(today) + '_pos'
-    db['Title']   = title_of_products
-    db[today_neg] = list_of_reviews_per_asin
-    db[today_pos] = list_positive_reviews_per_asin
-    
-    return db
 
-def today_tracked(db): # function to see if the tracker was already ran today
-  # we have to look into the case of tracking new asins in a day, then we have to run the function, but we do not need to do for those we have already done.
-  
-  values = db.prefix(str(today))
-  if len(values) != 0:
-    print('Tracker already ran today')
-    return db
-  else:
-    db = browser(list_of_asins,web_url)
-    return db
+    dic_data['ASIN'] = list_of_asins
+    dic_data['Title']   = title_of_products
+    dic_data[today_neg] = list_of_reviews_per_asin
+    dic_data[today_pos] = list_positive_reviews_per_asin
     
-db = today_tracked(db)
-    
-db = today_tracked(db)
+    return dic_data
+
+print(f'list of asin(2) {list_of_asins}')
+
+dic_data = browser(list_of_asins,web_url)   
+
 # db = browser(list_of_asins,web_url)
 # db = browser(list_of_asins,web_url)
 
@@ -225,38 +184,14 @@ def create_table(db):
 
   return dict # can be used to get csv file
 
-create_table(db)
+create_table(dic_data)
 
-def delete_asin(db): # not done
-  user_input_delete = str(input('\n Do you want to delete any asin from the table (yes/no) : '))
-  user_input_delete = user_input_delete.lower() 
-
-  while user_input_delete != 'no' and user_input_delete !='yes' :
-    print('\n Enter either (yes/no)')
-    user_input_delete = str(input('\n Do you want to delete any asin from the table (yes/no) : '))
-    user_input_delete = user_input_delete.lower()
-
-  if user_input_delete =='no':
-    return None
-
-  else:
-    asin_input = str(input('\n Enter the Asin you want to delete : '))
-    idx = db['ASIN'].index(asin_input)
-    
-    for key in db.keys():
-
-      try:
-        db[key].pop(idx)
-        
-      except:
-        pass
-
-    create_table(db)  # to show the asin is deleted 
-  
-delete_asin(db)    
+print('---')
+print(dic_data)
+print('---')
 
 
-def create_csv(db=db):
+def create_csv(db=dic_data):
   
   csv_input = str(input('\n Do you want this file to be send as a CSV file to your email-id ? (yes/no) : '))
 
@@ -302,6 +237,6 @@ def create_csv(db=db):
 
   
 
-create_csv(db)
+create_csv(dic_data)
 
 driver.quit()

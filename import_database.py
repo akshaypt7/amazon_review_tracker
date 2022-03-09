@@ -1,16 +1,6 @@
-from replit import db
-import pandas as pd
-# from datetime import date
-# from datetime import timedelta
-# from tabulate import tabulate
-
 import os
 import flask
 import requests
-
-
-# print(os.getenv("REPLIT_DB_URL"))
-db_url =os.getenv("REPLIT_DB_URL")
 
 app = flask.Flask(__name__)
 sess = requests.Session()
@@ -31,14 +21,4 @@ def proxy(path):
     proxy_resp.headers[k] = v
 
   return proxy_resp
-
-
-new_db = proxy(db_url)
-print(new_db.keys())
-  
-
-
-
-
-print('done')
 
