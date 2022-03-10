@@ -24,7 +24,7 @@ driver = webdriver.Chrome(options=chrome_options)
 
 
 
-print(f'db.  {db}')
+# print(f'db.  {db}')
 
 list_of_asins = list(db['ASIN']) # we access the old ASINs
 
@@ -45,7 +45,7 @@ def user_input(db=db):
       print('Pass the ASIN of products you need to track the reviews \n')
     
       new_asin = str(input('Enter Asin : '))
-      print(f'List of ASINs(0) {list_of_asins}')
+      
       if new_asin in list_of_asins:
         print('ASIN already being tracked \n')
         # user_input() # if we need to add different asin (recurssion)
@@ -57,7 +57,6 @@ def user_input(db=db):
         # there is an issue here if customer do not have any asin to add this might be infinite loop, i have intoduced break for that so it breaks from this while loop 
     elif user_ans == 'no':
       # list_of_asins.append(new_asin)
-      print(f'List of ASINs(0.1) {list_of_asins}')
       return list_of_asins
 
 
@@ -90,6 +89,8 @@ web_url = 'https://www.amazon.in/dp/'
 
 def browser(list_of_asins,web_url):
 
+  '''Here we use selenium to browse through each product in amzon using its ASIN, and we calcualte the postive and negative reviews we received for each product'''
+
   while True:
     
     for asin in db['ASIN'] :
@@ -100,7 +101,7 @@ def browser(list_of_asins,web_url):
       driver.get(new_url)
       time.sleep(1)
       try: 
-        driver.find_element_by_id('acrCustomerReviewText').click()
+        driver.find_element_by_id('acrCustomerReviewText').click() # finding the reviews
       except:
         print(f'There is an issue with {asin} Asin \n')
         list_of_reviews_per_asin.append('error with asin')
@@ -108,13 +109,13 @@ def browser(list_of_asins,web_url):
         continue
     
       
-      string_review = driver.find_element_by_id('acrCustomerReviewText').text
-      total_ratings = string_review.split()[0]
+      string_review = driver.find_element_by_id('acrCustomerReviewText').text # getting the total ratings
+      total_ratings = string_review.split()[0] # converting to integer
       total_ratings = total_ratings.replace(',','')
       
       total_ratings = int(total_ratings)
     
-    
+    # finding the positive and negative ratings of each product
       percentage_1star = driver.find_element_by_xpath('//*[@id="histogramTable"]/tbody/tr[5]/td[3]/span[2]').text
       percentage_1star = int(percentage_1star.split('%')[0]) # converting string into integer (ex: '20%' into 20)
     
@@ -140,7 +141,7 @@ def browser(list_of_asins,web_url):
       list_of_reviews_per_asin.append(total_neg_ratings)
       list_positive_reviews_per_asin.append(five_star_ratings)
 
-      # finding title of products
+      # finding title of each product
       title_full = driver.find_element_by_id('productTitle').text
       title_as_list = title_full.split()
 
@@ -163,14 +164,15 @@ def browser(list_of_asins,web_url):
     return db
 
 def today_tracked(db): # function to see if the tracker was already ran today
-  # we have to look into the case of tracking new asins in a day, then we have to run the function, but we do not need to do for those we have already done.
+
+#If the tracker already ran today this function asks if we need to run it again incase if we added new products
 
   values = db.prefix(str(today))
   if len(values) != 0:
     print('Tracker already ran today\n')
     user_input = str(input('Do you want to run it again(yes/no): '))
     if user_input== 'yes':
-      print(f'list of asin(3) {list_of_asins}')
+      
       db = browser(list_of_asins,web_url)
       return db
     elif user_input =='no':
@@ -183,9 +185,6 @@ def today_tracked(db): # function to see if the tracker was already ran today
     return db
     
 db = today_tracked(db)
-# db = browser(list_of_asins,web_url)
-# db = browser(list_of_asins,web_url)
-
 
 
 def create_table(db):
@@ -200,7 +199,10 @@ def create_table(db):
 
 create_table(db)
 
-def delete_asin(db): # not done
+def delete_asin(db): # 
+  """If we need to delete any asins we have entered we can use this function"""
+
+  
   user_input_delete = str(input('\n Do you want to delete any asin from the table (yes/no) : '))
   user_input_delete = user_input_delete.lower() 
 
@@ -230,6 +232,9 @@ delete_asin(db)
 
 
 def create_csv(db=db):
+
+# This function create csv file of the database and sends its as email
+# We use another function from email_csv for sending the email.
   
   csv_input = str(input('\n Do you want this file to be send as a CSV file to your email-id ? (yes/no) : '))
 
@@ -255,15 +260,20 @@ def create_csv(db=db):
     dict_positive['ASIN'] = db['ASIN']
     dict_positive['Title'] = db['Title']
 
-    print('Error-a')
+    
     df_pos = pd.DataFrame.from_dict(dict_positive,orient='index').T
+    df_pos.sort_index(axis=1,inplace=True)
     df_pos.set_index(['ASIN','Title'],inplace= True)
+
+    
     df_pos.to_csv('positive_review_data.csv')
   
     df_neg = pd.DataFrame.from_dict(dict_negative,orient='index').T
+    df_neg.sort_index(axis=1,inplace=True)
     df_neg.set_index(['ASIN','Title'],inplace= True)
     df_neg.to_csv('negative_review_data.csv')
-  
+
+    # Calling the function from email_csv to send email
     sent_email()
   
   elif csv_input == 'no':
