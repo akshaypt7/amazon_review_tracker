@@ -33,7 +33,8 @@ def user_input(db=db):
   '''Here we ask for the input from the user to add new asins to track. We also display the ASINS we are tracking.'''
 
   while True:
-  
+
+    print(f'Asins Currently being tracked : {list_of_asins}  .')
     user_ans= str(input('Do you want to enter new ASINs to track reviews- yes or no : '))
     user_ans = user_ans.lower()  
     
@@ -268,8 +269,8 @@ def create_csv(db=db):
     
     df_pos.to_csv('positive_review_data.csv')
   
-    df_neg = pd.DataFrame.from_dict(dict_negative,orient='index').T
-    df_neg.sort_index(axis=1,inplace=True)
+    df_neg = pd.DataFrame.from_dict(dict_negative,orient='index').T # there wont be any issues with arrays of different length, this happens when we add new asin, as some of the cells will be empty.
+    df_neg.sort_index(axis=1,inplace=True) # to have the columns in ascending order
     df_neg.set_index(['ASIN','Title'],inplace= True)
     df_neg.to_csv('negative_review_data.csv')
 
